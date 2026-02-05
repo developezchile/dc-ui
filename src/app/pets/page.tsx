@@ -2,17 +2,16 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import {petApi, Pet, authApi, petCareApi, TakeCareRequest} from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
+import { petApi, Pet, authApi } from '@/lib/api';
 import PetTable from '@/components/PetTable';
 import PetForm from '@/components/PetForm';
-import TakeCareForm from '@/components/TakeCareForm';
 import Modal from '@/components/Modal';
 import Link from 'next/link';
 
-export default function Home() {
+export default function PetsPage() {
   const router = useRouter();
-  const { user, isAuthenticated, isLoading: authLoading, logout } = useAuth();
+  const { user, isAuthenticated, isLoading: authLoading } = useAuth();
   const [pets, setPets] = useState<Pet[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -20,25 +19,18 @@ export default function Home() {
   const [editingPet, setEditingPet] = useState<Pet | null>(null);
   const [isDeleteModalOpen, setIsDeleteModalOpen] = useState(false);
   const [deletingId, setDeletingId] = useState<number | null>(null);
-  const [isTakeCareModalOpen, setIsTakeCareModalOpen] = useState(false);
-  const [selectedPetForCare, setSelectedPetForCare] = useState<Pet | null>(null);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
       router.push('/login');
     }
-    if (!authLoading && isAuthenticated && user?.roles?.includes('SITTER') && !user?.roles?.includes('OWNER')) {
-      router.push('/login');
-    }
-  }, [authLoading, isAuthenticated, user, router]);
+  }, [isAuthenticated, authLoading, router]);
 
   const fetchPets = useCallback(async () => {
-    if (!user?.id) return;
     try {
-      const token = authApi.getToken() || '';
       setLoading(true);
       setError(null);
-      const data = await petApi.getByOwner(user.id, token);
+      const data = await petApi.getAll(authApi.getToken() || '');
       setPets(data);
     } catch (err) {
       setError('Failed to load pets. Make sure the API is running on localhost:8080');
@@ -46,11 +38,13 @@ export default function Home() {
     } finally {
       setLoading(false);
     }
-  }, [user?.id]);
+  }, []);
 
   useEffect(() => {
-    fetchPets();
-  }, [fetchPets]);
+    if (isAuthenticated) {
+      fetchPets();
+    }
+  }, [fetchPets, isAuthenticated]);
 
   const handleCreate = () => {
     setEditingPet(null);
@@ -80,27 +74,7 @@ export default function Home() {
     }
   };
 
-  const handleLookingForSitter = (id: number) => {
-    const pet = pets.find(p => p.id === id);
-    if (pet) {
-      setSelectedPetForCare(pet);
-      setIsTakeCareModalOpen(true);
-    }
-  };
-
-  const handleTakeCareSubmit = async (data: TakeCareRequest) => {
-    try {
-      await petCareApi.create(data);
-      await fetchPets();
-      setIsTakeCareModalOpen(false);
-      setSelectedPetForCare(null);
-    } catch (err) {
-      setError('Failed to create take care request');
-      console.error(err);
-    }
-  };
-
-  const handleSubmit = async (petData: Omit<Pet, 'petId'>) => {
+  const handleSubmit = async (petData: Omit<Pet, 'id'>) => {
     try {
       const token = authApi.getToken() || '';
       const services: number[] = [];
@@ -118,79 +92,72 @@ export default function Home() {
     }
   };
 
+  if (authLoading) {
+    return (
+      <div className="min-h-screen bg-gray-50 dark:bg-gray-950 flex items-center justify-center">
+        <div className="h-8 w-8 border-4 border-blue-600 border-t-transparent rounded-full animate-spin" />
+      </div>
+    );
+  }
+
+  if (!isAuthenticated) {
+    return null;
+  }
+
   return (
-    <div className="min-h-screen bg-orange-50 dark:bg-gray-950">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-950">
       <div className="max-w-6xl mx-auto px-4 py-8">
         <header className="mb-8">
           <div className="flex items-center justify-between">
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
-                Dos Colas
-              </h1>
-              <p className="text-gray-600 dark:text-gray-400 mt-1">
-                Pet Management System
+              <div className="flex items-center gap-4 mb-1">
+                <Link 
+                  href="/" 
+                  className="text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-200 transition-colors"
+                >
+                  <svg
+                    xmlns="http://www.w3.org/2000/svg"
+                    className="h-5 w-5"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M10 19l-7-7m0 0l7-7m-7 7h18"
+                    />
+                  </svg>
+                </Link>
+                <h1 className="text-3xl font-bold text-gray-900 dark:text-white">
+                  Pets
+                </h1>
+              </div>
+              <p className="text-gray-600 dark:text-gray-400 ml-9">
+                Pet Management
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              {!authLoading && user && (
-                <span className="text-xl text-gray-600 dark:text-gray-400">
-                  Hi, {user.username}. You are: {user.roles?.join(', ') || 'No roles'}
-                </span>
-              )}
-              {user?.roles?.includes('SITTER') && (
-                <Link
-                  href="/dashboard"
-                  className="flex items-center gap-2 px-4 py-2 text-gray-900 bg-amber-300 rounded-lg hover:bg-amber-400 transition-colors font-medium"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4 5a1 1 0 011-1h14a1 1 0 011 1v2a1 1 0 01-1 1H5a1 1 0 01-1-1V5zM4 13a1 1 0 011-1h6a1 1 0 011 1v6a1 1 0 01-1 1H5a1 1 0 01-1-1v-6zM16 13a1 1 0 011-1h2a1 1 0 011 1v6a1 1 0 01-1 1h-2a1 1 0 01-1-1v-6z"
-                    />
-                  </svg>
-                  Sitter Dashboard
-                </Link>
-              )}
-              {user?.roles?.includes('OWNER') && (
-                <button
-                  onClick={handleCreate}
-                  className="flex items-center gap-2 px-4 py-2 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
-                >
-                  <svg
-                    xmlns="http://www.w3.org/2000/svg"
-                    className="h-5 w-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M12 4v16m8-8H4"
-                    />
-                  </svg>
-                  Add Pet
-                </button>
-              )}
-                <button
-                    onClick={() => { logout(); router.push('/login'); }}
-                    className="flex items-center gap-2 px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
-                >
-                    <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
-                    </svg>
-                    Logout
-                </button>
-            </div>
+            <button
+              onClick={handleCreate}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors font-medium"
+            >
+              <svg
+                xmlns="http://www.w3.org/2000/svg"
+                className="h-5 w-5"
+                fill="none"
+                viewBox="0 0 24 24"
+                stroke="currentColor"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth={2}
+                  d="M12 4v16m8-8H4"
+                />
+              </svg>
+              Add Pet
+            </button>
           </div>
         </header>
 
@@ -221,7 +188,6 @@ export default function Home() {
             pets={pets}
             onEdit={handleEdit}
             onDelete={handleDelete}
-            onLookingForSitter={handleLookingForSitter}
             loading={loading}
           />
         </main>
@@ -269,33 +235,12 @@ export default function Home() {
               </button>
               <button
                 onClick={confirmDelete}
-                className="px-4 py-2 text-white bg-red-500 rounded-lg hover:bg-red-600 transition-colors"
+                className="px-4 py-2 text-white bg-red-600 rounded-lg hover:bg-red-700 transition-colors"
               >
                 Delete
               </button>
             </div>
           </div>
-        </Modal>
-
-        <Modal
-          isOpen={isTakeCareModalOpen}
-          onClose={() => {
-            setIsTakeCareModalOpen(false);
-            setSelectedPetForCare(null);
-          }}
-          title="Find a Sitter"
-        >
-          {selectedPetForCare && (
-            <TakeCareForm
-              petId={selectedPetForCare.id!}
-              petName={selectedPetForCare.name}
-              onSubmit={handleTakeCareSubmit}
-              onCancel={() => {
-                setIsTakeCareModalOpen(false);
-                setSelectedPetForCare(null);
-              }}
-            />
-          )}
         </Modal>
       </div>
     </div>
