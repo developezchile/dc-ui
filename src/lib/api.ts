@@ -1,3 +1,5 @@
+import { Notyf } from 'notyf';
+
 const API_BASE_URL = 'http://localhost:8080/api';
 
 export interface LoginRequest {
@@ -320,7 +322,8 @@ export interface PetToCare {
   dateRange: string;
   location: string;
   notes: string;
-  rate: number;
+  dailyRate: number;
+  totalAmount: number;
 }
 
 export const petsToCareApi = {
@@ -341,7 +344,7 @@ export const petsToCareApi = {
 
   async getAvailable(): Promise<PetToCare[]> {
     const token = authApi.getToken();
-    const response = await fetch(`${API_BASE_URL}/api/take-care/available`, {
+    const response = await fetch(`${API_BASE_URL}/take-care/available`, {
       headers: {
         'Authorization': `Bearer ${token}`,
       },
@@ -350,7 +353,7 @@ export const petsToCareApi = {
       window.location.href = '/login';
       throw new Error('Unauthorized');
     }
-    if (!response.ok) throw new Error('Failed to fetch pets by status');
+    if (!response.ok) return [];
     const data = await response.json();
     return data.map((pet: PetToCare & { owner?: { address?: string } }) => ({
       ...pet,
@@ -378,6 +381,7 @@ export const petsToCareApi = {
     startDate: string;
     endDate: string;
     dailyRate: number;
+    totalAmount: number;
     notes: string;
   }): Promise<void> {
     const token = authApi.getToken();
@@ -393,6 +397,8 @@ export const petsToCareApi = {
       window.location.href = '/login';
       throw new Error('Unauthorized');
     }
-    if (!response.ok) throw new Error('Failed to apply to sit');
+    if (!response.ok) {
+      throw new Error('Failed to apply to sit');
+    }
   },
 };

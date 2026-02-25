@@ -2,10 +2,10 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import Link from 'next/link';
 import { useAuth } from '@/context/AuthContext';
 import { PetCareAssignment, petCareApi } from '@/lib/api';
 import ActivePetCareCard from '@/components/ActivePetCareCard';
+import FindPetsModal from '@/components/FindPetsModal';
 import { PawPrint, LogOut } from 'lucide-react';
 
 export default function DashboardPage() {
@@ -14,6 +14,7 @@ export default function DashboardPage() {
   const [assignments, setAssignments] = useState<PetCareAssignment[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<'ALL' | 'ACTIVE' | 'UPCOMING' | 'COMPLETED'>('ALL');
+  const [isFindPetsModalOpen, setIsFindPetsModalOpen] = useState(false);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -64,12 +65,12 @@ export default function DashboardPage() {
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <Link
-                href="/petstocare"
+              <button
+                onClick={() => setIsFindPetsModalOpen(true)}
                 className="px-4 py-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors font-medium dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700 flex items-center gap-2"
               >
                 <PawPrint className="w-5 h-5" />
-              </Link>
+              </button>
               <button
                 onClick={() => { logout(); router.push('/login'); }}
                 className="p-2 text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200 transition-colors dark:bg-gray-800 dark:text-gray-300 dark:hover:bg-gray-700"
@@ -124,12 +125,12 @@ export default function DashboardPage() {
                 ? "You don't have any pet care assignments yet." 
                 : `No ${filter} assignments found.`}
             </p>
-            <Link
-              href="/petstocare"
+            <button
+              onClick={() => setIsFindPetsModalOpen(true)}
               className="inline-block px-6 py-3 bg-orange-500 text-white rounded-lg hover:bg-orange-600 transition-colors font-medium"
             >
               Find Pets to Care For
-            </Link>
+            </button>
           </div>
         ) : (
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -139,6 +140,10 @@ export default function DashboardPage() {
           </div>
         )}
       </div>
+      <FindPetsModal
+        isOpen={isFindPetsModalOpen}
+        onClose={() => setIsFindPetsModalOpen(false)}
+      />
     </div>
   );
 }

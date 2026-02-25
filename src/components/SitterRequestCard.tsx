@@ -2,6 +2,8 @@
 
 import { useState } from 'react';
 import { PetToCare, petsToCareApi, authApi } from '@/lib/api';
+import { Notyf } from 'notyf';
+
 
 interface SitterRequestProps {
   pet: PetToCare;
@@ -19,12 +21,27 @@ export default function SitterRequestCard({ pet }: SitterRequestProps) {
         sitterId: user?.id ?? 0,
         startDate: today,
         endDate: today,
-        dailyRate: pet.rate,
+        dailyRate: pet.dailyRate,
+        totalAmount: pet.totalAmount,
         notes: '',
       });
-      alert('Application submitted successfully!');
+        const notyf = new Notyf({
+        duration: 3000,
+        position: {
+          x: 'center',
+          y: 'center',
+        }
+      });
+      notyf.success('Application submitted successfully!');
     } catch (error) {
-      alert(error instanceof Error ? error.message : 'Failed to apply');
+        const notyf = new Notyf({
+        duration: 3000,
+        position: {
+          x: 'center',
+          y: 'center',
+        }
+      });
+      notyf.error('Failed to apply to sit');
     } finally {
       setIsApplying(false);
     }
@@ -40,7 +57,8 @@ export default function SitterRequestCard({ pet }: SitterRequestProps) {
     dateRange,
     location,
     notes,
-    rate,
+    dailyRate,
+    totalAmount,
   } = pet;
 
   return (
@@ -103,9 +121,14 @@ export default function SitterRequestCard({ pet }: SitterRequestProps) {
         <div>
           <p className="text-xs text-gray-500 dark:text-gray-400 uppercase tracking-wide mb-1">Rate</p>
           <p className="text-gray-900 dark:text-white">
-            <span className="text-2xl font-bold">${rate}</span>
+            <span className="text-2xl font-bold">${dailyRate}</span>
             <span className="text-sm text-gray-500 dark:text-gray-400">/day</span>
           </p>
+          <p className="text-gray-900 dark:text-white">
+            <span className="text-sm text-gray-500 dark:text-gray-400">Total Amount</span>
+            <span className="text-2xl font-bold">${totalAmount}</span>
+          </p>
+
         </div>
         <button
           onClick={handleApply}

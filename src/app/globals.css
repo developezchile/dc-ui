@@ -1,4 +1,6 @@
 @import "tailwindcss";
+@plugin "flyonui";
+@import "notyf/notyf.min.css";
 
 @theme inline {
   --color-background: #ffffff;
