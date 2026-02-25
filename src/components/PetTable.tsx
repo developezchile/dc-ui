@@ -51,7 +51,8 @@ export default function PetTable({ pets, onEdit, onDelete, onLookingForSitter, l
             <th className="text-left py-3 px-4 font-medium text-gray-600 dark:text-gray-400">Breed</th>
             <th className="text-left py-3 px-4 font-medium text-gray-600 dark:text-gray-400">Age</th>
             <th className="text-left py-3 px-4 font-medium text-gray-600 dark:text-gray-400">Weight</th>
-            <th className="text-left py-3 px-4 font-medium text-gray-600 dark:text-gray-400">Status</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-600 dark:text-gray-400">Sitter status</th>
+            <th className="text-left py-3 px-4 font-medium text-gray-600 dark:text-gray-400">Pet status</th>
             <th className="text-right py-3 px-4 font-medium text-gray-600 dark:text-gray-400">Actions</th>
           </tr>
         </thead>
@@ -67,6 +68,7 @@ export default function PetTable({ pets, onEdit, onDelete, onLookingForSitter, l
               <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{pet.age} years</td>
               <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{pet.weight} kg</td>
               <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{pet.status}</td>
+              <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{pet.petStatus}</td>
               <td className="py-3 px-4">
                 <div className="flex justify-end gap-2">
                   <button
