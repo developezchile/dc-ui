@@ -26,6 +26,7 @@ export default function Home() {
   const [activeSittings, setActiveSittings] = useState<TakeCare[]>([]);
   const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
   const [selectedTakeCare, setSelectedTakeCare] = useState<TakeCare | null>(null);
+  const [modalError, setModalError] = useState<string | null>(null);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -63,11 +64,13 @@ export default function Home() {
 
   const handleCreate = () => {
     setEditingPet(null);
+    setModalError(null);
     setIsModalOpen(true);
   };
 
   const handleEdit = (pet: Pet) => {
     setEditingPet(pet);
+    setModalError(null);
     setIsModalOpen(true);
   };
 
@@ -122,8 +125,7 @@ export default function Home() {
       setIsModalOpen(false);
       setEditingPet(null);
     } catch (err) {
-      setError(editingPet ? 'Failed to update pet' : 'Failed to create pet');
-      console.error(err);
+      setModalError(editingPet ? 'Failed to update pet' : 'Failed to create pet');
     }
   };
 
@@ -278,8 +280,10 @@ export default function Home() {
           onClose={() => {
             setIsModalOpen(false);
             setEditingPet(null);
+            setModalError(null);
           }}
           title={editingPet ? 'Edit Pet' : 'Add New Pet'}
+          error={modalError}
         >
           <PetForm
             pet={editingPet}

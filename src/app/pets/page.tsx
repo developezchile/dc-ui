@@ -74,6 +74,10 @@ export default function PetsPage() {
     }
   };
 
+  const handleLookingForSitter = (id: number) => {
+    console.log('Looking for sitter for pet:', id);
+  };
+
   const handleSubmit = async (petData: Omit<Pet, 'id'>) => {
     try {
       const token = authApi.getToken() || '';
@@ -188,6 +192,7 @@ export default function PetsPage() {
             pets={pets}
             onEdit={handleEdit}
             onDelete={handleDelete}
+            onLookingForSitter={handleLookingForSitter}
             loading={loading}
           />
         </main>

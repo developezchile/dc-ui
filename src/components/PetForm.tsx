@@ -105,8 +105,8 @@ export default function PetForm({ pet, ownerId, onSubmit, onCancel }: PetFormPro
           Status
         </label>
         <select
-          value={formData.status}
-          onChange={(e) => setFormData({ ...formData, status: e.target.value })}
+          value={formData.petStatus}
+          onChange={(e) => setFormData({ ...formData, petStatus: e.target.value })}
           className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-orange-500 focus:border-transparent dark:bg-gray-800 dark:border-gray-600 dark:text-white"
           required
         >

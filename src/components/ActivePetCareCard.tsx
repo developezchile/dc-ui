@@ -8,9 +8,9 @@ interface ActivePetCareCardProps {
 
 export default function ActivePetCareCard({ assignment }: ActivePetCareCardProps) {
   const statusStyles: Record<string, string> = {
-    active: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
-    upcoming: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
-    completed: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
+    ACTIVE: 'bg-green-100 text-green-700 dark:bg-green-900/30 dark:text-green-400',
+    UPCOMING: 'bg-amber-100 text-amber-700 dark:bg-amber-900/30 dark:text-amber-400',
+    COMPLETED: 'bg-gray-100 text-gray-700 dark:bg-gray-800 dark:text-gray-400',
   };
 
   const formatDateRange = (start: string, end: string) => {
@@ -58,7 +58,7 @@ export default function ActivePetCareCard({ assignment }: ActivePetCareCardProps
           <span className="text-2xl font-bold">${assignment.dailyRate}</span>
           <span className="text-sm text-gray-500 dark:text-gray-400">/day</span>
         </p>
-        {assignment.status === 'active' && (
+        {assignment.status === 'ACTIVE' && (
           <div className="text-right">
             <p className="text-xs text-gray-500 dark:text-gray-400">Days left</p>
             <p className="text-xl font-bold text-orange-500 dark:text-orange-400">{calculateDaysLeft()}</p>
