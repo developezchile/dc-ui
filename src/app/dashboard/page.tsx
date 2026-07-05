@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { useAuth } from '@/context/AuthContext';
 import { PetCareAssignment, petCareApi } from '@/lib/api';
@@ -22,21 +22,27 @@ export default function DashboardPage() {
     }
   }, [authLoading, isAuthenticated, router]);
 
-  useEffect(() => {
-    const loadAssignments = async () => {
-      if (!user) return;
-      setLoading(true);
-      try {
-        const data = await petCareApi.getMyAssignments(user.id);
-        setAssignments(data);
-      } catch (err) {
-        console.error('Failed to load assignments:', err);
-      } finally {
-        setLoading(false);
-      }
-    };
-    loadAssignments();
+  const loadAssignments = useCallback(async () => {
+    if (!user) return;
+    setLoading(true);
+    try {
+      const data = await petCareApi.getMyAssignments(user.id);
+      setAssignments(data);
+    } catch (err) {
+      console.error('Failed to load assignments:', err);
+    } finally {
+      setLoading(false);
+    }
   }, [user]);
+
+  useEffect(() => {
+    void loadAssignments();
+  }, [loadAssignments]);
+
+  const handleAssigned = useCallback(() => {
+    setIsFindPetsModalOpen(false);
+    void loadAssignments();
+  }, [loadAssignments]);
 
   const filteredAssignments = filter === 'ALL' 
     ? assignments 
@@ -143,6 +149,7 @@ export default function DashboardPage() {
       <FindPetsModal
         isOpen={isFindPetsModalOpen}
         onClose={() => setIsFindPetsModalOpen(false)}
+        onAssigned={handleAssigned}
       />
     </div>
   );

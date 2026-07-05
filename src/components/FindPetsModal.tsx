@@ -7,9 +7,10 @@ import SitterRequestCard from '@/components/SitterRequestCard';
 interface FindPetsModalProps {
   isOpen: boolean;
   onClose: () => void;
+  onAssigned?: () => void;
 }
 
-export default function FindPetsModal({ isOpen, onClose }: FindPetsModalProps) {
+export default function FindPetsModal({ isOpen, onClose, onAssigned }: FindPetsModalProps) {
   const [petsToCare, setpetsToCare] = useState<PetToCare[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +86,7 @@ export default function FindPetsModal({ isOpen, onClose }: FindPetsModalProps) {
           ) : (
             <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {petsToCare.map((r) => (
-                <SitterRequestCard key={r.id} pet={r} />
+                <SitterRequestCard key={r.id} pet={r} onSuccess={onAssigned} />
               ))}
             </div>
           )}

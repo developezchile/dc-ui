@@ -7,9 +7,10 @@ import { Notyf } from 'notyf';
 
 interface SitterRequestProps {
   pet: PetToCare;
+  onSuccess?: () => void;
 }
 
-export default function SitterRequestCard({ pet }: SitterRequestProps) {
+export default function SitterRequestCard({ pet, onSuccess }: SitterRequestProps) {
   const [isApplying, setIsApplying] = useState(false);
 
   const handleApply = async () => {
@@ -17,7 +18,7 @@ export default function SitterRequestCard({ pet }: SitterRequestProps) {
     try {
       const user = authApi.getUser();
       const today = new Date().toISOString().split('T')[0];
-      await petsToCareApi.applyToSit(pet.id, {
+      await petsToCareApi.applyToSit(pet.petId, {
         sitterId: user?.id ?? 0,
         startDate: today,
         endDate: today,
@@ -33,6 +34,7 @@ export default function SitterRequestCard({ pet }: SitterRequestProps) {
         }
       });
       notyf.success('Application submitted successfully!');
+      onSuccess?.();
     } catch (error) {
         const notyf = new Notyf({
         duration: 3000,

@@ -106,41 +106,56 @@ export interface User {
 
 export const userApi = {
   async getAll(): Promise<User[]> {
-    const response = await fetch(`${API_BASE_URL}/users`);
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/users`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (response.status === 401) { window.location.href = '/login'; throw new Error('Unauthorized'); }
     if (!response.ok) throw new Error('Failed to fetch users');
     return response.json();
   },
 
   async getById(id: number): Promise<User> {
-    const response = await fetch(`${API_BASE_URL}/users/${id}`);
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/users/${id}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (response.status === 401) { window.location.href = '/login'; throw new Error('Unauthorized'); }
     if (!response.ok) throw new Error('Failed to fetch user');
     return response.json();
   },
 
   async create(user: Omit<User, 'id'>): Promise<User> {
+    const token = authApi.getToken();
     const response = await fetch(`${API_BASE_URL}/users`, {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify(user),
     });
+    if (response.status === 401) { window.location.href = '/login'; throw new Error('Unauthorized'); }
     if (!response.ok) throw new Error('Failed to create user');
     return response.json();
   },
 
   async update(id: number, user: Omit<User, 'id'>): Promise<User> {
+    const token = authApi.getToken();
     const response = await fetch(`${API_BASE_URL}/users/${id}`, {
       method: 'PUT',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
       body: JSON.stringify(user),
     });
+    if (response.status === 401) { window.location.href = '/login'; throw new Error('Unauthorized'); }
     if (!response.ok) throw new Error('Failed to update user');
     return response.json();
   },
 
   async delete(id: number): Promise<void> {
+    const token = authApi.getToken();
     const response = await fetch(`${API_BASE_URL}/users/${id}`, {
       method: 'DELETE',
+      headers: { 'Authorization': `Bearer ${token}` },
     });
+    if (response.status === 401) { window.location.href = '/login'; throw new Error('Unauthorized'); }
     if (!response.ok) throw new Error('Failed to delete user');
   },
 };
@@ -181,7 +196,7 @@ export const petCareApi = {
       window.location.href = '/login';
       throw new Error('Unauthorized');
     }
-    if (!response.ok) throw new Error('Failed to fetch assignments');
+    if (!response.ok) return [];
     return response.json();
   },
 
@@ -313,6 +328,7 @@ export const petApi = {
 
 export interface PetToCare {
   id: number;
+  petId: number;
   ownerName: string;
   initials: string;
   name: string;
@@ -400,5 +416,85 @@ export const petsToCareApi = {
     if (!response.ok) {
       throw new Error('Failed to apply to sit');
     }
+  },
+};
+
+export interface TakeCare {
+  id: number;
+  petId: number;
+  petName: string;
+  sitterId: number;
+  sitterName: string;
+  startDate: string;
+  endDate: string;
+  dailyRate: number;
+  totalAmount: number;
+  status: 'LOOKING_FOR_SITTER' | 'ON_SITTER' | 'COMPLETED';
+  notes?: string;
+  createdAt: string;
+  owner?: { id: number; username: string; email: string };
+}
+
+export const takeCareApi = {
+  async getByPet(petId: number): Promise<TakeCare[]> {
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/take-care/pet/${petId}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (response.status === 401) { window.location.href = '/login'; throw new Error('Unauthorized'); }
+    if (!response.ok) throw new Error('Failed to fetch take cares');
+    return response.json();
+  },
+};
+
+export interface Payment {
+  id: number;
+  externalReference: string;
+  transbankToken?: string;
+  transbankUrl?: string;
+  buyOrder?: string;
+  authorizationCode?: string;
+  cardLastFourDigits?: string;
+  petId: number;
+  petName: string;
+  userId: number;
+  userName: string;
+  amount: number;
+  currency: string;
+  status: 'PENDING' | 'COMPLETED' | 'FAILED';
+  description?: string;
+  createdAt: string;
+  paidAt?: string;
+}
+
+export interface CreatePaymentRequest {
+  userId: number;
+  petId: number;
+  amount: number;
+  currency?: string;
+  description?: string;
+}
+
+export const paymentApi = {
+  async create(data: CreatePaymentRequest): Promise<Payment> {
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/payments`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json', 'Authorization': `Bearer ${token}` },
+      body: JSON.stringify(data),
+    });
+    if (response.status === 401) { window.location.href = '/login'; throw new Error('Unauthorized'); }
+    if (!response.ok) throw new Error('Failed to create payment');
+    return response.json();
+  },
+
+  async getByUser(userId: number): Promise<Payment[]> {
+    const token = authApi.getToken();
+    const response = await fetch(`${API_BASE_URL}/payments/user/${userId}`, {
+      headers: { 'Authorization': `Bearer ${token}` },
+    });
+    if (response.status === 401) { window.location.href = '/login'; throw new Error('Unauthorized'); }
+    if (!response.ok) throw new Error('Failed to fetch payments');
+    return response.json();
   },
 };

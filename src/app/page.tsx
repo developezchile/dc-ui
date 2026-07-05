@@ -2,11 +2,12 @@
 
 import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
-import {petApi, Pet, authApi, petCareApi, TakeCareRequest} from '@/lib/api';
+import {petApi, Pet, authApi, petCareApi, TakeCareRequest, takeCareApi, TakeCare} from '@/lib/api';
 import { useAuth } from '@/context/AuthContext';
 import PetTable from '@/components/PetTable';
 import PetForm from '@/components/PetForm';
 import TakeCareForm from '@/components/TakeCareForm';
+import PaymentModal from '@/components/PaymentModal';
 import Modal from '@/components/Modal';
 import Link from 'next/link';
 
@@ -22,6 +23,9 @@ export default function Home() {
   const [deletingId, setDeletingId] = useState<number | null>(null);
   const [isTakeCareModalOpen, setIsTakeCareModalOpen] = useState(false);
   const [selectedPetForCare, setSelectedPetForCare] = useState<Pet | null>(null);
+  const [activeSittings, setActiveSittings] = useState<TakeCare[]>([]);
+  const [isPaymentModalOpen, setIsPaymentModalOpen] = useState(false);
+  const [selectedTakeCare, setSelectedTakeCare] = useState<TakeCare | null>(null);
 
   useEffect(() => {
     if (!authLoading && !isAuthenticated) {
@@ -40,6 +44,11 @@ export default function Home() {
       setError(null);
       const data = await petApi.getByOwner(user.id, token);
       setPets(data);
+      const takeCareResults = await Promise.all(
+        data.filter(p => p.id).map(p => takeCareApi.getByPet(p.id!).catch(() => []))
+      );
+      const onSitter = takeCareResults.flat().filter((tc: TakeCare) => tc.status === 'ON_SITTER');
+      setActiveSittings(onSitter);
     } catch (err) {
       setError('Failed to load pets. Make sure the API is running on localhost:8080');
       console.error(err);
@@ -226,6 +235,44 @@ export default function Home() {
           />
         </main>
 
+        {activeSittings.length > 0 && (
+          <section className="mt-8">
+            <h2 className="text-xl font-semibold text-gray-900 dark:text-white mb-4">
+              Active Sittings — Pending Payment
+            </h2>
+            <div className="grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+              {activeSittings.map((tc) => (
+                <div
+                  key={tc.id}
+                  className="bg-white dark:bg-gray-900 rounded-xl shadow-sm border border-gray-200 dark:border-gray-800 p-4 space-y-3"
+                >
+                  <div className="flex items-center justify-between">
+                    <span className="font-semibold text-gray-900 dark:text-white">{tc.petName}</span>
+                    <span className="text-xs px-2 py-1 rounded-full bg-amber-100 text-amber-800 dark:bg-amber-900/30 dark:text-amber-300">
+                      ON SITTER
+                    </span>
+                  </div>
+                  <div className="text-sm text-gray-600 dark:text-gray-400 space-y-1">
+                    <p>Sitter: <span className="text-gray-900 dark:text-white">{tc.sitterName}</span></p>
+                    <p>{tc.startDate} → {tc.endDate}</p>
+                  </div>
+                  <div className="flex items-center justify-between pt-1">
+                    <span className="text-lg font-bold text-orange-600 dark:text-orange-400">
+                      ${tc.totalAmount}
+                    </span>
+                    <button
+                      onClick={() => { setSelectedTakeCare(tc); setIsPaymentModalOpen(true); }}
+                      className="px-3 py-1.5 text-sm text-white bg-orange-500 rounded-lg hover:bg-orange-600 transition-colors font-medium"
+                    >
+                      Pay Now
+                    </button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        )}
+
         <Modal
           isOpen={isModalOpen}
           onClose={() => {
@@ -293,6 +340,26 @@ export default function Home() {
               onCancel={() => {
                 setIsTakeCareModalOpen(false);
                 setSelectedPetForCare(null);
+              }}
+            />
+          )}
+        </Modal>
+
+        <Modal
+          isOpen={isPaymentModalOpen}
+          onClose={() => {
+            setIsPaymentModalOpen(false);
+            setSelectedTakeCare(null);
+          }}
+          title="Payment Summary"
+        >
+          {selectedTakeCare && user && (
+            <PaymentModal
+              takeCare={selectedTakeCare}
+              userId={user.id}
+              onClose={() => {
+                setIsPaymentModalOpen(false);
+                setSelectedTakeCare(null);
               }}
             />
           )}

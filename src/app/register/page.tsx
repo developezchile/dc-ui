@@ -13,7 +13,7 @@ export default function RegisterPage() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
-  const [roles, setRoles] = useState<('OWNER' | 'SITTER')[]>(['SITTER']);
+  const [roles, setRoles] = useState<('OWNER' | 'SITTER')[]>([]);
   const [error, setError] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
 
@@ -41,7 +41,8 @@ export default function RegisterPage() {
       }
       const auth = await authApi.register({ username, email, password, roles });
       login(auth);
-      router.push('/dashboard');
+      const isOnlyOwner = auth.roles.includes('OWNER') && !auth.roles.includes('SITTER');
+      router.push(isOnlyOwner ? '/' : '/dashboard');
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Registration failed');
     } finally {
